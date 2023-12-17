@@ -12,7 +12,7 @@ include(Catch)
 # ---- Tests ----
 
 add_executable(scenegraph_test
-    source/scenegraph_test.cpp
+    source/model.test.cpp
 )
 target_link_libraries(
     scenegraph_test PRIVATE
