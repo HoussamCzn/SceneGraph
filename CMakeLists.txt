@@ -14,7 +14,8 @@ include(cmake/variables.cmake)
 # ---- Declare library ----
 
 add_library(scenegraph_lib OBJECT
-    source/lib.cpp
+    source/cli.cpp
+    source/collada.cpp
 )
 
 target_include_directories(
@@ -27,6 +28,8 @@ target_compile_features(scenegraph_lib PUBLIC cxx_std_20)
 
 find_package(assimp REQUIRED)
 target_link_libraries(scenegraph_lib PRIVATE assimp::assimp)
+find_package(CLI11 REQUIRED)
+target_link_libraries(scenegraph_lib PRIVATE CLI11::CLI11)
 find_package(fmt REQUIRED)
 target_link_libraries(scenegraph_lib PRIVATE fmt::fmt)
 find_package(glm REQUIRED)
@@ -37,7 +40,7 @@ target_link_libraries(scenegraph_lib PRIVATE glm::glm)
 add_executable(scenegraph_exe source/main.cpp)
 add_executable(scenegraph::exe ALIAS scenegraph_exe)
 
-set_property(TARGET scenegraph_exe PROPERTY OUTPUT_NAME scenegraph)
+set_property(TARGET scenegraph_exe PROPERTY OUTPUT_NAME clda)
 
 target_compile_features(scenegraph_exe PRIVATE cxx_std_20)
 
