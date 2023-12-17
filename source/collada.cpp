@@ -1,44 +1,38 @@
 #include "collada.hpp"
 
+#include <fmt/core.h>
 #include <span> // std::span
 
-auto transformations(aiNode const* node) noexcept -> transform_data
+/**
+ * @brief Decomposes the transformation matrix of a node into a translation, rotation and scaling.
+ * @param node The node to decompose.
+ * @return The transformation data of the node.
+ */
+auto node_transformations(aiNode const* node) noexcept -> transform_data
 {
     transform_data data;
     node->mTransformation.Decompose(data.scaling, data.rotation, data.translation);
+
     return data;
 }
 
-auto analyze_meshes(aiScene const* scene, std::string_view mesh_name) noexcept -> std::vector<mesh_info>
+auto analyze_nodes(aiScene const* scene, std::string_view node_name) -> std::vector<node_data>
 {
-    std::span const meshes{scene->mMeshes, scene->mNumMeshes};
-    std::vector<mesh_info> infos;
-
-    if (!mesh_name.empty())
-    {
-        auto const* mesh = scene->mRootNode->FindNode(mesh_name.data());
-
-        if (mesh != nullptr) [[likely]]
+    std::vector<node_data> infos;
+    std::span const nodes{scene->mRootNode->mChildren, scene->mRootNode->mNumChildren};
+    std::ranges::for_each(nodes, [&infos, node_name, scene](auto const* node) {
+        if (node_name.empty() || node_name == node->mName.C_Str()) [[likely]]
         {
-            mesh_info info{};
-            info.name = mesh->mName.C_Str();
-            info.transform = transformations(mesh);
-            infos.push_back(info);
+            auto& info = infos.emplace_back(node->mName.C_Str(), node_transformations(node));
+            std::span const node_meshes{node->mMeshes, node->mNumMeshes};
+            std::span const scene_meshes{scene->mMeshes, scene->mNumMeshes};
+            info.meshes.reserve(node_meshes.size());
+            std::ranges::for_each(node_meshes, [&info, scene_meshes](auto const mesh_index) {
+                auto const* mesh = scene_meshes[mesh_index];
+                info.meshes.emplace_back(mesh->mName.C_Str(), mesh->mNumFaces, mesh->mNumVertices);
+            });
         }
-    }
-    else
-    {
-        infos.reserve(meshes.size());
-
-        for (auto const* mesh : meshes)
-        {
-            mesh_info info{};
-            info.name = mesh->mName.C_Str();
-            auto const* node = scene->mRootNode->FindNode(mesh->mName);
-            if (node != nullptr) { info.transform = transformations(node); }
-            infos.push_back(info);
-        }
-    }
+    });
 
     return infos;
 }
