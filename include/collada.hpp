@@ -43,7 +43,7 @@ struct node_data
  * @param node The node to apply the transformation to.
  * @param data The transformation data.
  */
-auto apply_transformations(aiScene const* scene, aiNode* const node, aiMatrix4x4 const& parent_transform = {}) noexcept -> void;
+auto apply_transformations(aiScene const* scene, aiNode* root_node, aiMatrix4x4 const& initial_transform) noexcept -> void;
 
 /**
  * @brief Analyzes the nodes of a scene. Empty names will analyze all nodes.
