@@ -39,24 +39,43 @@ auto print_infos(std::span<node_data const> nodes) -> void
 auto run_cli(int argc, char** argv) noexcept -> int
 {
     CLI::App app{"Analyze COLLADA files."};
-    std::string path;
+    std::string input_path;
+    std::string output_path;
     std::string node_name;
 
-    app.add_option("FILE", path, "Path to the COLLADA file")->required();
-    app.add_option("-n, --node", node_name, "Specify a mesh to analyze (default: all meshes)");
+    app.add_option("FILE", input_path, "Path to the COLLADA file")->required();
+    app.add_option("-n, --node", node_name, "Specify a node to analyze (default: all nodes)");
+    app.add_option("-o, --output", output_path, "Path to the output file (default: overwrite input file)");
+
     CLI11_PARSE(app, argc, argv);
 
     Assimp::Importer importer;
-    aiScene const* scene = importer.ReadFile(path, aiProcess_Triangulate);
+    aiScene const* scene = importer.ReadFile(input_path, aiProcess_Triangulate);
 
     if (scene == nullptr || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) != 0U || scene->mRootNode == nullptr) [[unlikely]]
     {
-        fmt::println(stderr, "Failed to load file \"{}\"", path);
+        fmt::println(stderr, "{}", importer.GetErrorString());
 
         return EXIT_FAILURE;
     }
 
-    auto infos = analyze_nodes(scene, node_name);
+    if (!output_path.empty())
+    {
+        apply_transformations(scene, scene->mRootNode, scene->mRootNode->mTransformation);
+
+        if (!write_scene(scene, output_path)) [[unlikely]]
+        {
+            fmt::println(stderr, "Failed to write file \"{}\"", output_path);
+
+            return EXIT_FAILURE;
+        }
+
+        fmt::println("Successfully wrote file \"{}\"", output_path);
+
+        return EXIT_SUCCESS;
+    }
+
+    auto const infos = analyze_nodes(scene, node_name);
 
     if (infos.empty()) [[unlikely]]
     {
