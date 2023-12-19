@@ -63,9 +63,9 @@ auto run_cli(int argc, char** argv) noexcept -> int
     {
         apply_transformations(scene, scene->mRootNode, scene->mRootNode->mTransformation);
 
-        if (!write_scene(scene, output_path)) [[unlikely]]
+        if (auto const write_result = write_scene(scene, output_path)) [[unlikely]]
         {
-            fmt::println(stderr, "Failed to write file \"{}\"", output_path);
+            fmt::println(stderr, "{}", *write_result);
 
             return EXIT_FAILURE;
         }

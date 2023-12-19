@@ -3,6 +3,7 @@
 #include <assimp/scene.h> // aiScene, aiNode, aiMesh
 #include <cstdint>        // std::uint32_t
 #include <filesystem>     // std::filesystem::path
+#include <optional>       // std::optional
 #include <string>         // std::string
 #include <string_view>    // std::string_view
 #include <vector>         // std::vector
@@ -59,4 +60,4 @@ auto analyze_nodes(aiScene const* scene, std::string_view node_name = "") -> std
  * @param path The path to write the scene to.
  * @return True if the scene was written successfully, false otherwise.
  */
-auto write_scene(aiScene const* scene, std::filesystem::path const& path) noexcept -> bool;
+auto write_scene(aiScene const* scene, std::filesystem::path const& path) noexcept -> std::optional<std::string>;

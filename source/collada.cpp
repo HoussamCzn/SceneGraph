@@ -52,11 +52,12 @@ auto apply_transformations(aiScene const* scene, aiNode* root_node, aiMatrix4x4 
     }
 }
 
-auto write_scene(aiScene const* const scene, std::filesystem::path const& path) noexcept -> bool
+auto write_scene(aiScene const* const scene, std::filesystem::path const& path) noexcept -> std::optional<std::string>
 {
     Assimp::Exporter exporter;
+    if (exporter.Export(scene, "collada", path.c_str()) == AI_SUCCESS) [[likely]] { return std::nullopt; }
 
-    return exporter.Export(scene, "collada", path.c_str()) == AI_SUCCESS;
+    return exporter.GetErrorString();
 }
 
 auto analyze_nodes(aiScene const* scene, std::string_view node_name) -> std::vector<node_data>
