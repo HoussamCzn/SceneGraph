@@ -1,6 +1,9 @@
 #include "collada.hpp"
 
-#include <fmt/core.h>
+#include <assimp/Exporter.hpp> // Assimp::Exporter
+#include <assimp/matrix4x4.h>  // aiMatrix4x4
+#include <fmt/core.h>          // fmt::println
+#include <ranges>
 #include <span> // std::span
 
 /**
@@ -8,12 +11,42 @@
  * @param node The node to decompose.
  * @return The transformation data of the node.
  */
-auto node_transformations(aiNode const* node) noexcept -> transform_data
+auto node_transformations(aiNode const* const node) noexcept -> transform_data
 {
     transform_data data;
     node->mTransformation.Decompose(data.scaling, data.rotation, data.translation);
 
     return data;
+}
+
+auto apply_transformations(aiScene const* scene, aiNode* node, aiMatrix4x4 const& parent_transform) noexcept -> void
+{
+    auto const global_transform = parent_transform * node->mTransformation;
+    std::span const scene_meshes{scene->mMeshes, scene->mNumMeshes};
+    std::span const node_meshes{node->mMeshes, node->mNumMeshes};
+    std::ranges::for_each(node_meshes, [scene_meshes, global_transform](auto const mesh_index) {
+        auto const* mesh = scene_meshes[mesh_index];
+        std::span const vertices{mesh->mVertices, mesh->mNumVertices};
+        std::ranges::for_each(vertices, [global_transform](auto& vertex) { vertex *= global_transform; });
+        
+        if (mesh->HasNormals())
+        {
+            std::span const normals{mesh->mNormals, mesh->mNumVertices};
+            std::ranges::for_each(normals, [global_transform](auto& normal) { normal *= global_transform; });
+        }
+    });
+
+    std::span const children{node->mChildren, node->mNumChildren};
+    std::ranges::for_each(children,
+                          [scene, global_transform](auto* child) { apply_transformations(scene, child, global_transform); });
+    node->mTransformation = aiMatrix4x4{};
+}
+
+auto write_scene(aiScene const* const scene, std::filesystem::path const& path) noexcept -> bool
+{
+    Assimp::Exporter exporter;
+
+    return exporter.Export(scene, "collada", path.c_str()) == AI_SUCCESS;
 }
 
 auto analyze_nodes(aiScene const* scene, std::string_view node_name) -> std::vector<node_data>
