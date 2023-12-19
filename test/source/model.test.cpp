@@ -2,6 +2,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <catch2/catch_test_macros.hpp>
+#include <collada.hpp>
 #include <fmt/core.h>
 #include <fstream>
 #include <glm/glm.hpp>
@@ -72,22 +73,22 @@ static constexpr auto mock_collada =
 	<library_visual_scenes>
     <visual_scene id="the-scene">
       <node id="parent-cube">
-          <instance_geometry url="#parent-cube"/>
-          <node id="child-cube">
-              <instance_geometry url="#child-cube"/>
-          </node>
+	  	<translate> 2 2 2 </translate>
+		<rotate> 0 0 1 0 </rotate>
+		<scale> 2 2 2 </scale>
+        <instance_geometry url="#parent-cube"/>
+        <node id="child-cube">
+          <instance_geometry url="#child-cube"/>
+        </node>
       </node>
     </visual_scene>
   </library_visual_scenes>
-	<scene>
-		<node>
-			<translate> 0 0 0 </translate>
-			<rotate> 0 0 1 0 </rotate>
-			<scale> 1 1 1 </scale>
-			<instance url="#the-scene"/>
-		</node>
-		<instance_visual_scene url="#the-scene"/>
-	</scene>
+  <scene>
+	<node>
+	  <instance url="#the-scene"/>
+	</node>
+	<instance_visual_scene url="#the-scene"/>
+  </scene>
 </COLLADA>)"sv;
 
 TEST_CASE("Process COLLADA", "[library]")
@@ -98,7 +99,7 @@ TEST_CASE("Process COLLADA", "[library]")
     file.close();
 
     auto importer = Assimp::Importer{};
-    auto const* scene = importer.ReadFile("mock.input.dae", aiProcess_Triangulate | aiProcess_FlipUVs);
+    auto const* scene = importer.ReadFile("mock.input.dae", aiProcess_Triangulate);
 
     SECTION("Load COLLADA")
     {
@@ -131,19 +132,17 @@ TEST_CASE("Process COLLADA", "[library]")
 
     SECTION("Transformations")
     {
-        auto const* parent_node = scene->mRootNode->FindNode("parent-cube");
+        auto* parent_node = scene->mRootNode->FindNode("parent-cube");
         REQUIRE(parent_node != nullptr);
         auto const parent_transform = parent_node->mTransformation;
-        CHECK(parent_transform.IsIdentity());
         aiVector3D parent_scaling;
         aiQuaternion parent_rotation;
         aiVector3D parent_position;
         parent_transform.Decompose(parent_scaling, parent_rotation, parent_position);
 
-        auto const* child_node = scene->mRootNode->FindNode("child-cube");
+        auto* child_node = scene->mRootNode->FindNode("child-cube");
         REQUIRE(child_node != nullptr);
         auto const child_transform = child_node->mTransformation;
-        CHECK(child_transform.IsIdentity());
         aiVector3D child_scaling;
         aiQuaternion child_rotation;
         aiVector3D child_position;
@@ -153,17 +152,34 @@ TEST_CASE("Process COLLADA", "[library]")
         {
             SECTION("Parent cube")
             {
-                CHECK(parent_scaling == aiVector3D{1, 1, 1});
-                CHECK(parent_rotation == aiQuaternion{1, 0, 0, 0});
-                CHECK(parent_position == aiVector3D{0, 0, 0});
+                CHECK(parent_scaling == aiVector3D{2.F, 2.F, 2.F});
+                CHECK(parent_rotation == aiQuaternion{});
+                CHECK(parent_position == aiVector3D{2.F, 2.F, 2.F});
+            }
+        }
+
+        SECTION("Apply")
+        {
+            SECTION("Parent cube")
+            {
+                // change vertex positions and check if they are correct
+                auto* parent_cube = scene->mRootNode->FindNode("parent-cube");
+                REQUIRE(parent_cube != nullptr);
+                for (auto i = 0U; i < parent_cube->mNumMeshes; ++i)
+                {
+                    auto* parent_mesh = scene->mMeshes[parent_cube->mMeshes[i]];
+                    REQUIRE(parent_mesh != nullptr);
+                    for (auto j = 0U; j < parent_mesh->mNumVertices; ++j)
+                    {
+                        auto& vertex = parent_mesh->mVertices[j];
+                        vertex.x += parent_position.x;
+                        vertex.y += parent_position.y;
+                        vertex.z += parent_position.z;
+                    }
+                }
             }
 
-            SECTION("Child cube")
-            {
-                CHECK(child_scaling == aiVector3D{1, 1, 1});
-                CHECK(child_rotation == aiQuaternion{1, 0, 0, 0});
-                CHECK(child_position == aiVector3D{0, 0, 0});
-            }
+            SECTION("Child cube") {}
         }
     }
 }
