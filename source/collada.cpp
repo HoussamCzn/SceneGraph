@@ -19,7 +19,7 @@ auto node_transformations(aiNode const* const node) noexcept -> transform_data
     return data;
 }
 
-auto apply_transformations(aiScene const* scene, aiNode* node, aiMatrix4x4 const& parent_transform) noexcept -> void
+auto apply_transformations(aiScene const* scene, aiNode* const node, aiMatrix4x4 const& parent_transform) noexcept -> void
 {
     auto const global_transform = parent_transform * node->mTransformation;
     std::span const scene_meshes{scene->mMeshes, scene->mNumMeshes};
