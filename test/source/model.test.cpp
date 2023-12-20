@@ -5,7 +5,6 @@
 #include <collada.hpp>
 #include <fmt/core.h>
 #include <fstream>
-#include <glm/glm.hpp>
 #include <string_view>
 
 using std::operator""sv;
