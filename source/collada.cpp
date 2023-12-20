@@ -2,7 +2,6 @@
 
 #include <assimp/Exporter.hpp> // Assimp::Exporter
 #include <assimp/matrix4x4.h>  // aiMatrix4x4
-#include <fmt/core.h>          // fmt::println
 #include <span>                // std::span
 #include <stack>               // std::stack
 

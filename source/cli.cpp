@@ -5,34 +5,34 @@
 #include <CLI/CLI.hpp>          // CLI::App, CLI11_PARSE
 #include <assimp/Importer.hpp>  // Assimp::Importer
 #include <assimp/postprocess.h> // aiProcess_Triangulate
-#include <fmt/core.h>           // fmt::println
+#include <fmt/core.h>           // fmt::print
 #include <span>                 // std::span
 
 auto print_infos(std::span<node_data const> nodes) -> void
 {
     std::ranges::for_each(nodes, [](auto const& node) {
-        fmt::println("==================================================");
-        fmt::println("Node: {}", node.name);
-        fmt::println("--------------------------------------------------");
-        fmt::println("Translation: ({:.2f}, {:.2f}, {:.2f})", node.transform.translation.x, node.transform.translation.y,
+        fmt::print("==================================================\n");
+        fmt::print("Node: {}\n", node.name);
+        fmt::print("--------------------------------------------------\n");
+        fmt::print("Translation: ({:.2f}, {:.2f}, {:.2f})\n", node.transform.translation.x, node.transform.translation.y,
                      node.transform.translation.z);
-        fmt::println("Rotation:    ({:.2f}, {:.2f}, {:.2f}, {:.2f})", node.transform.rotation.x, node.transform.rotation.y,
+        fmt::print("Rotation:    ({:.2f}, {:.2f}, {:.2f}, {:.2f})\n", node.transform.rotation.x, node.transform.rotation.y,
                      node.transform.rotation.z, node.transform.rotation.w);
-        fmt::println("Scaling:     ({:.2f}, {:.2f}, {:.2f})", node.transform.scaling.x, node.transform.scaling.y,
+        fmt::print("Scaling:     ({:.2f}, {:.2f}, {:.2f})\n", node.transform.scaling.x, node.transform.scaling.y,
                      node.transform.scaling.z);
 
         if (!node.meshes.empty()) [[unlikely]]
         {
-            fmt::println("\nMeshes:");
+            fmt::print("\nMeshes:\n");
             std::ranges::for_each(node.meshes, [](auto const& mesh) {
-                fmt::println("\t  Name:     {}", mesh.name);
-                fmt::println("\t  Faces:    {}", mesh.face_count);
-                fmt::println("\t  Vertices: {}", mesh.vertex_count);
+                fmt::print("\t  Name:     {}\n", mesh.name);
+                fmt::print("\t  Faces:    {}\n", mesh.face_count);
+                fmt::print("\t  Vertices: {}\n", mesh.vertex_count);
             });
         }
-        else { fmt::println("No meshes are attached to this node."); }
+        else { fmt::print("No meshes are attached to this node.\n"); }
 
-        fmt::println("==================================================\n");
+        fmt::print("==================================================\n\n");
     });
 }
 
@@ -54,7 +54,7 @@ auto run_cli(int argc, char** argv) noexcept -> int
 
     if (scene == nullptr || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) != 0U || scene->mRootNode == nullptr) [[unlikely]]
     {
-        fmt::println(stderr, "{}", importer.GetErrorString());
+        fmt::print(stderr, "{}\n", importer.GetErrorString());
 
         return EXIT_FAILURE;
     }
@@ -65,12 +65,12 @@ auto run_cli(int argc, char** argv) noexcept -> int
 
         if (auto const write_result = write_scene(scene, output_path)) [[unlikely]]
         {
-            fmt::println(stderr, "{}", *write_result);
+            fmt::print(stderr, "{}\n", *write_result);
 
             return EXIT_FAILURE;
         }
 
-        fmt::println("Successfully wrote file \"{}\"", output_path);
+        fmt::print("Successfully wrote file \"{}\"\n", output_path);
 
         return EXIT_SUCCESS;
     }
@@ -79,8 +79,8 @@ auto run_cli(int argc, char** argv) noexcept -> int
 
     if (infos.empty()) [[unlikely]]
     {
-        if (node_name.empty()) { fmt::println(stderr, "No nodes found."); }
-        else { fmt::println(stderr, "No nodes with name \"{}\" found.", node_name); }
+        if (node_name.empty()) { fmt::print(stderr, "No nodes found.\n"); }
+        else { fmt::print(stderr, "No nodes with name \"{}\" found.\n", node_name); }
     }
 
     print_infos(infos);
