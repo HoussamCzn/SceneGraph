@@ -32,8 +32,6 @@ find_package(CLI11 REQUIRED)
 target_link_libraries(scenegraph_lib PRIVATE CLI11::CLI11)
 find_package(fmt REQUIRED)
 target_link_libraries(scenegraph_lib PRIVATE fmt::fmt)
-find_package(glm REQUIRED)
-target_link_libraries(scenegraph_lib PRIVATE glm::glm)
 
 # ---- Declare executable ----
 
