@@ -21,7 +21,7 @@ auto node_transformations(aiNode const* const node) noexcept -> transform_data
 
 auto apply_transformations(aiScene const* scene, aiNode* root_node, aiMatrix4x4 const& initial_transform) noexcept -> void
 {
-    std::stack<std::pair<aiNode*, aiMatrix4x4>> stack;
+    std::stack<std::pair<aiNode* const, aiMatrix4x4 const>> stack;
     stack.emplace(root_node, initial_transform);
 
     while (!stack.empty())
