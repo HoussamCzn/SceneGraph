@@ -1,0 +1,35 @@
+{
+  "name": "scenegraph",
+  "version-semver": "0.1.0",
+  "dependencies": [
+    {
+      "name": "assimp",
+      "version>=": "5.3.1#3"
+    },
+    {
+      "name": "cli11",
+      "version>=": "2.3.2"
+    },
+    {
+      "name": "fmt",
+      "version>=": "10.1.1"
+    },
+    {
+      "name": "glm",
+      "version>=": "0.9.9.8#2"
+    }
+  ],
+  "default-features": [],
+  "features": {
+    "test": {
+      "description": "Dependencies for testing",
+      "dependencies": [
+        {
+          "name": "catch2",
+          "version>=": "3.4.0"
+        }
+      ]
+    }
+  },
+  "builtin-baseline": "ff6867374598312866fecfc64736a334591ceace"
+}
